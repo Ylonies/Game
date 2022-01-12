@@ -51,7 +51,29 @@ class Player(pygame.sprite.Sprite):
         self.pos_x = self.rect.x
         self.pos_y = self.rect.y
         player_group.add(self) #он ниче не умеет делать
-
+        self.move_down = True # вниз
+        self.move_up = 0
+        self.max = 100
+        self.pressedRight, self.pressedLeft = False, False
+        self.val = 10
+    def update(self):
+        if self.move_down == True:
+            self.rect.y += self.val
+            if pygame.sprite.spritecollideany(self, usual_blocks):
+                self.move_down = False
+                self.rect.y -= self.val
+                self.move_up += self.val
+        else:
+            if self.move_up == self.max:
+                self.move_up = 0
+                self.move_down = True
+            else:
+                self.rect.y -= self.val
+                self.move_up += self.val
+        if self.pressedRight == True:
+            self.rect.x += self.val
+        if self.pressedLeft == True:
+            self.rect.x -= self.val
 
 class Block(pygame.sprite.Sprite): # просто блок
     def __init__(self, pos_x, pos_y):
@@ -82,7 +104,7 @@ if __name__ == '__main__':
     tile_width = tile_height = 50
     size = w, h = 500, 400
     screen = pygame.display.set_mode(size)
-    FPS = 50
+    fps = 30
     clock = pygame.time.Clock()
 
 
@@ -92,22 +114,41 @@ if __name__ == '__main__':
     all_sprites = pygame.sprite.Group()
     usual_blocks = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
-    # camera = Camera()
+    camera = Camera()
 
     player, level_x, level_y = generate_level(load_level('fon.txt'))
     while running:
-        # camera.apply(player)
+        camera.apply(player)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if event.type == pygame.KEYDOWN:
-                player_group.update(event) #пока что не написано
+
+            if event.type == pygame.KEYDOWN:  # правая стрелка
+                if event.key == pygame.K_RIGHT:
+                    player.pressedRight = True
+                    print(1)
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_RIGHT:
+                    player.pressedRight = False
+                    print(2)
+
+            if event.type == pygame.KEYDOWN:  # левая стрелка
+                if event.key == pygame.K_LEFT:
+                    player.pressedLeft = True
+                    print(3)
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT:
+                    player.pressedLeft = False
+                    print(4)
+        player_group.update()
         screen.fill((0, 0, 0)) #вообще здесь должна быть картинка с фоном, но пока что так
         usual_blocks.draw(screen)
         player_group.draw(screen)
         all_sprites.draw(screen)
         pygame.display.flip()
-        # for sprites in all_sprites:
-        #     camera.update(sprites)
+
+        clock.tick(fps)
+        for sprites in all_sprites:
+            camera.update(sprites)
     pygame.quit()
 

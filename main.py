@@ -42,7 +42,7 @@ class Player(pygame.sprite.Sprite):
         player_group.add(self) #он ниче не умеет делать
         self.move_down = True # вниз
         self.move_up = 0
-        self.max = 100
+        self.max = 110
         self.pressedRight, self.pressedLeft = False, False
         self.val = 10
     def update(self):
@@ -108,11 +108,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
     fps = 20
     clock = pygame.time.Clock()
-
-
-
-
-
+    bg = load_image("screen.jpg")
     all_sprites = pygame.sprite.Group()
     usual_blocks = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
@@ -120,7 +116,7 @@ if __name__ == '__main__':
     player, level_x, level_y = generate_level(load_level('fon.txt'))
     camera = Camera()
     while running:
-        # camera.apply(player)
+        camera.update(player)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -143,14 +139,14 @@ if __name__ == '__main__':
                     player.pressedLeft = False
                     print(4)
         player_group.update()
-        screen.fill((0, 0, 0)) #вообще здесь должна быть картинка с фоном, но пока что так
+        screen.blit(bg, (0, 0)) #вообще здесь должна быть картинка с фоном, но пока что так
         usual_blocks.draw(screen)
         player_group.draw(screen)
         all_sprites.draw(screen)
         pygame.display.flip()
 
         clock.tick(fps)
-        # for sprites in all_sprites:
-        #     camera.update(sprites)
+        for sprites in all_sprites:
+             camera.apply(sprites)
     pygame.quit()
 

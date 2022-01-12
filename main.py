@@ -28,18 +28,7 @@ def load_level(filename):
 
 
 #где-то здесь расписывются классы
-class Camera:
-    # зададим начальный сдвиг камеры
-    def __init__(self):
-        self.dy = 0
 
-    # сдвинуть объект obj на смещение камеры
-    def apply(self, obj):
-        obj.rect.y += self.dy
-
-    # позиционировать камеру на объекте target
-    def update(self, target):
-        self.dy = -(target.rect.y + target.rect.h // 2 - h // 2)
 
 
 class Player(pygame.sprite.Sprite):
@@ -84,6 +73,19 @@ class Block(pygame.sprite.Sprite): # просто блок
         usual_blocks.add(self)
         all_sprites.add(self)
 
+class Camera:
+    # зададим начальный сдвиг камеры
+    def __init__(self):
+        self.dy = 0
+
+    # сдвинуть объект obj на смещение камеры
+    def apply(self, obj):
+        obj.rect.y += self.dy
+
+    # позиционировать камеру на объекте target
+    def update(self, target):
+        self.dy = -(target.rect.y + target.rect.h // 2 - h // 2)
+
 
 def generate_level(level):
     new_player, x, y = None, None, None
@@ -104,21 +106,21 @@ if __name__ == '__main__':
     tile_width = tile_height = 50
     size = w, h = 500, 400
     screen = pygame.display.set_mode(size)
-    fps = 30
+    fps = 20
     clock = pygame.time.Clock()
 
 
 
 
-    player = None
+
     all_sprites = pygame.sprite.Group()
     usual_blocks = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
-    camera = Camera()
 
     player, level_x, level_y = generate_level(load_level('fon.txt'))
+    camera = Camera()
     while running:
-        camera.apply(player)
+        # camera.apply(player)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -148,7 +150,7 @@ if __name__ == '__main__':
         pygame.display.flip()
 
         clock.tick(fps)
-        for sprites in all_sprites:
-            camera.update(sprites)
+        # for sprites in all_sprites:
+        #     camera.update(sprites)
     pygame.quit()
 

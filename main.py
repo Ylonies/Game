@@ -40,11 +40,11 @@ class Player(pygame.sprite.Sprite):
         # self.pos_x = self.rect.x
         # self.pos_y = self.rect.y
         player_group.add(self) #он ниче не умеет делать
-        self.move_down = True # вниз
+        self.move_down = False # вверх
         self.move_up = 0
-        self.max = 110
+        self.max = 120
         self.pressedRight, self.pressedLeft = False, False
-        self.val = 10
+        self.val = 5
         self.h = 40
     def update(self):
         if self.move_down == True:
@@ -55,19 +55,20 @@ class Player(pygame.sprite.Sprite):
                 print(self.rect.y)
                 if block.rect.y == self.rect.y + self.h:
                     self.move_down = False
-                    self.rect.y -= self.val
+                    self.rect.y -= 1.5 * self.val
                     self.move_up += self.val
         else:
             if self.move_up == self.max:
                 self.move_up = 0
                 self.move_down = True
+                self.rect.y -= 1.5 * self.val
             else:
-                self.rect.y -= self.val
+                self.rect.y -= 1.5 * self.val
                 self.move_up += self.val
         if self.pressedRight == True:
-            self.rect.x += self.val
+            self.rect.x += 1.5 * self.val
         if self.pressedLeft == True:
-            self.rect.x -= self.val
+            self.rect.x -= 1.5 * self.val
 
 class Block(pygame.sprite.Sprite): # просто блок
     def __init__(self, pos_x, pos_y):
@@ -111,7 +112,7 @@ if __name__ == '__main__':
     tile_width = tile_height = 50
     size = w, h = 500, 400
     screen = pygame.display.set_mode(size)
-    fps = 20
+    fps = 60
     clock = pygame.time.Clock()
     bg = load_image("screen.jpg")
     all_sprites = pygame.sprite.Group()

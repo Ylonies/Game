@@ -37,21 +37,26 @@ class Player(pygame.sprite.Sprite):
         self.image = load_image('player.jpg')
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
-        self.pos_x = self.rect.x
-        self.pos_y = self.rect.y
+        # self.pos_x = self.rect.x
+        # self.pos_y = self.rect.y
         player_group.add(self) #он ниче не умеет делать
         self.move_down = True # вниз
         self.move_up = 0
         self.max = 110
         self.pressedRight, self.pressedLeft = False, False
         self.val = 10
+        self.h = 40
     def update(self):
         if self.move_down == True:
             self.rect.y += self.val
             if pygame.sprite.spritecollideany(self, usual_blocks):
-                self.move_down = False
-                self.rect.y -= self.val
-                self.move_up += self.val
+                block = pygame.sprite.spritecollide(self, usual_blocks, False)[0]
+                print(block.rect.y)
+                print(self.rect.y)
+                if block.rect.y == self.rect.y + self.h:
+                    self.move_down = False
+                    self.rect.y -= self.val
+                    self.move_up += self.val
         else:
             if self.move_up == self.max:
                 self.move_up = 0
@@ -124,20 +129,17 @@ if __name__ == '__main__':
             if event.type == pygame.KEYDOWN:  # правая стрелка
                 if event.key == pygame.K_RIGHT:
                     player.pressedRight = True
-                    print(1)
+
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT:
                     player.pressedRight = False
-                    print(2)
 
             if event.type == pygame.KEYDOWN:  # левая стрелка
                 if event.key == pygame.K_LEFT:
                     player.pressedLeft = True
-                    print(3)
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     player.pressedLeft = False
-                    print(4)
         player_group.update()
         screen.blit(bg, (0, 0)) #вообще здесь должна быть картинка с фоном, но пока что так
         usual_blocks.draw(screen)

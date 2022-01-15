@@ -1,3 +1,5 @@
+import random
+
 import pygame
 import os
 import sys
@@ -42,42 +44,44 @@ class Player(pygame.sprite.Sprite):
         player_group.add(self) #он ниче не умеет делать
         self.move_down = False # вверх
         self.move_up = 0
-        self.max = 120
+        self.max = 160
         self.pressedRight, self.pressedLeft = False, False
-        self.val = 5
+        self.val = 10
         self.h = 40
     def update(self):
         if self.move_down == True:
-            self.rect.y += self.val
             if pygame.sprite.spritecollideany(self, usual_blocks):
                 block = pygame.sprite.spritecollide(self, usual_blocks, False)[0]
-                print(block.rect.y)
-                print(self.rect.y)
+                print(block.rect.y, self.rect.y)
                 if block.rect.y == self.rect.y + self.h:
                     self.move_down = False
-                    self.rect.y -= 1.5 * self.val
-                    self.move_up += self.val
+                else:
+                    self.rect.y += self.val
+            else:
+                self.rect.y += self.val
         else:
             if self.move_up == self.max:
                 self.move_up = 0
                 self.move_down = True
-                self.rect.y -= 1.5 * self.val
+                self.rect.y -= self.val
             else:
-                self.rect.y -= 1.5 * self.val
+                self.rect.y -= self.val
                 self.move_up += self.val
         if self.pressedRight == True:
-            self.rect.x += 1.5 * self.val
+            self.rect.x += 0.75 * self.val
         if self.pressedLeft == True:
-            self.rect.x -= 1.5 * self.val
+            self.rect.x -= 0.75 * self.val
 
 class Block(pygame.sprite.Sprite): # просто блок
     def __init__(self, pos_x, pos_y):
         super().__init__(usual_blocks, all_sprites)
         self.image = load_image('usual_block.jpg')
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x, tile_height * pos_y)
+        # self.rect = self.image.get_rect().move(
+        #     tile_width * pos_x, tile_height * pos_y)
+        self.rect = self.image.get_rect().move(pos_x, pos_y)
         usual_blocks.add(self)
         all_sprites.add(self)
+        self.y = pos_y // tile_height
 
 class Camera:
     # зададим начальный сдвиг камеры
@@ -94,17 +98,27 @@ class Camera:
 
 
 def generate_level(level):
+    global last
     new_player, x, y = None, None, None
     for y in range(len(level)):
-        for x in range(len(level[y])): #если в txt файле че то там, то такой то класс то-то
+        for x in range(len(level[y])): #если в txt файле че то там, то такой то класс то-т
             if level[y][x] == 'B':
-                Block(x, y)
+                if y == 0:
+                    last = Block(tile_width * x, tile_height * y)
+                else:
+                    Block(tile_width * x, tile_height * y)
             elif level[y][x] == 'H':
                 new_player = Player(x, y)
+                print("1", new_player.rect.y)
     return new_player, x, y
 
-
-
+def generate_new_level(level):
+    global last
+    level_y = random.choice(level[6:0:-2])
+    print(level_y)
+    for x in range(len(level_y)):
+        if level_y[x] == 'B':
+            last = Block(tile_width * x, last.rect.y - 100)
 
 if __name__ == '__main__':
     #какие то константы
@@ -112,14 +126,16 @@ if __name__ == '__main__':
     tile_width = tile_height = 50
     size = w, h = 500, 400
     screen = pygame.display.set_mode(size)
-    fps = 60
+    fps = 30
+    MYEVENTTYPE = pygame.USEREVENT + 1
+    pygame.time.set_timer(MYEVENTTYPE, 100)
     clock = pygame.time.Clock()
     bg = load_image("screen.jpg")
     all_sprites = pygame.sprite.Group()
     usual_blocks = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
-
     player, level_x, level_y = generate_level(load_level('fon.txt'))
+    generate_new_level(load_level('fon.txt'))
     camera = Camera()
     while running:
         camera.update(player)
@@ -141,11 +157,12 @@ if __name__ == '__main__':
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     player.pressedLeft = False
+            if event.type == MYEVENTTYPE:
+                generate_new_level(load_level('fon.txt'))
         player_group.update()
         screen.blit(bg, (0, 0)) #вообще здесь должна быть картинка с фоном, но пока что так
         usual_blocks.draw(screen)
         player_group.draw(screen)
-        all_sprites.draw(screen)
         pygame.display.flip()
 
         clock.tick(fps)

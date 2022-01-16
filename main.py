@@ -112,13 +112,16 @@ def generate_level(level):
                 print("1", new_player.rect.y)
     return new_player, x, y
 
+
 def generate_new_level(level):
-    global last
+    global last, new
     level_y = random.choice(level[6:0:-2])
     print(level_y)
     for x in range(len(level_y)):
         if level_y[x] == 'B':
-            last = Block(tile_width * x, last.rect.y - 100)
+            new = Block(tile_width * x, last.rect.y - 100)
+    last = new
+
 
 if __name__ == '__main__':
     #какие то константы
@@ -128,7 +131,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
     fps = 30
     MYEVENTTYPE = pygame.USEREVENT + 1
-    pygame.time.set_timer(MYEVENTTYPE, 100)
+    pygame.time.set_timer(MYEVENTTYPE, 500)
     clock = pygame.time.Clock()
     bg = load_image("screen.jpg")
     all_sprites = pygame.sprite.Group()

@@ -114,14 +114,13 @@ def generate_level(level):
 
 
 def generate_new_level(level):
-    global last, new
+    global last
     level_y = random.choice(level[6:0:-2])
     print(level_y)
     for x in range(len(level_y)):
         if level_y[x] == 'B':
             new = Block(tile_width * x, last.rect.y - 100)
     last = new
-
 
 if __name__ == '__main__':
     #какие то константы

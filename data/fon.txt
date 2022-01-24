@@ -1,3 +1,7 @@
+#GG#BBB##G
+
+#B##B#G###
+
 ###B###B##
 
 BB####B###
@@ -9,4 +13,4 @@ BB####B###
 ##BBB##BB#
 
 #H########
-BBBBBBBBBB
+BBGGGGBBBB

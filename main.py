@@ -4,7 +4,9 @@ import os
 import sys
 pygame.init()
 
-
+monetki = 0
+visota = 0
+helovek = 100
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -31,7 +33,7 @@ def load_level(filename):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
-        self.image = load_image('player.jpg')
+        self.image = load_image('player.png', -1)
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
         # self.pos_x = self.rect.x
@@ -42,10 +44,11 @@ class Player(pygame.sprite.Sprite):
         self.max = 200
         self.pressedRight, self.pressedLeft = False, False
         self.val = 10
-        self.h = 40
+        self.h = 70
         self.score = 0
 
     def update(self):
+        global visota
         if self.move_down == True:
             gg = 0
             if pygame.sprite.spritecollideany(self, usual_blocks):
@@ -55,6 +58,20 @@ class Player(pygame.sprite.Sprite):
                     self.move_down = False
                     self.max = 200
                     self.val = 10
+                    visota = self.rect.y
+                else:
+                    self.val = 10
+                    self.rect.y += self.val
+                    gg = 1
+
+            if pygame.sprite.spritecollideany(self, lomaet_blocks):
+                block = pygame.sprite.spritecollide(self, lomaet_blocks, False)[0]
+                print(block.rect.y, self.rect.y)
+                if block.rect.y == self.rect.y + self.h:
+                    if pygame.sprite.spritecollide(self, lomaet_blocks, True):
+                        self.move_down = False
+                        self.max = 200
+                        self.val = 10
                 else:
                     self.val = 10
                     self.rect.y += self.val
@@ -71,6 +88,7 @@ class Player(pygame.sprite.Sprite):
                     self.val = 10
                     self.rect.y += self.val
                     gg = 1
+
             elif gg == 0:
                 self.val = 10
                 self.rect.y += self.val
@@ -88,8 +106,10 @@ class Player(pygame.sprite.Sprite):
             self.rect.x += 0.75 * self.val
         if self.pressedLeft == True:
             self.rect.x -= 0.75 * self.val
+        global monetki
         if pygame.sprite.spritecollide(self, moneta_blocks, True):
             self.score += 1
+            monetki += 1
 
 
 class Block_dis(pygame.sprite.Sprite):#просто блок
@@ -104,14 +124,26 @@ class Block_dis(pygame.sprite.Sprite):#просто блок
         self.y = pos_y // tile_height
 
 
-class Moneta(pygame.sprite.Sprite):#просто блок
+class Moneta(pygame.sprite.Sprite):# просто блок
     def __init__(self, pos_x, pos_y):
         super().__init__(moneta_blocks, all_sprites)
-        self.image = load_image('u.jpg')
+        self.image = load_image('ramen.png', -1)
         # self.rect = self.image.get_rect().move(
         #     tile_width * pos_x, tile_height * pos_y)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         moneta_blocks.add(self)
+        all_sprites.add(self)
+        self.y = pos_y // tile_height
+
+
+class Block_lomaet(pygame.sprite.Sprite):# просто блок
+    def __init__(self, pos_x, pos_y):
+        super().__init__(lomaet_blocks, all_sprites)
+        self.image = load_image('gg.jpg')
+        # self.rect = self.image.get_rect().move(
+        #     tile_width * pos_x, tile_height * pos_y)
+        self.rect = self.image.get_rect().move(pos_x, pos_y)
+        lomaet_blocks.add(self)
         all_sprites.add(self)
         self.y = pos_y // tile_height
 
@@ -134,6 +166,10 @@ class Camera:
 
     # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
+        global visota
+        global helovek
+        #helovek = obj.rect.y + self.dy
+        #obj.rect.y = max(visota, helovek)
         obj.rect.y += self.dy
 
     # позиционировать камеру на объекте target
@@ -150,15 +186,14 @@ def generate_level(level):
                 if y == 1:
                     last = Block(tile_width * x, tile_height * y)
                 else:
+
                     Block(tile_width * x, tile_height * y)
 
             elif level[y][x] == 'G':
                 Block_dis(tile_width * x, tile_height * y)
 
-            elif level[y][x] == '#':
-                a = random.randint(1, 50)
-                if a == 1:
-                    Moneta(tile_width * x, tile_height * y)
+            elif level[y][x] == 'L':
+                Block_lomaet(tile_width * x, tile_height * y)
 
             elif level[y][x] == 'H':
                 new_player = Player(x, y)
@@ -168,6 +203,7 @@ def generate_level(level):
 
 def generate_new_level(level, old_lvl1, old_lvl2):
     global last
+    gg = 0
     level_y = random.choice(level[len(level) - 4:0:-3])
     while old_lvl1 == level_y or old_lvl2 == level_y:
         level_y = random.choice(level[len(level) - 4:0:-3])
@@ -177,13 +213,23 @@ def generate_new_level(level, old_lvl1, old_lvl2):
     print(level[len(level) - 4:0:-3])
     for x in range(len(level_y)):
         if level_y[x] == 'B':
+            a = random.randint(1, 10)
+            if a == 1 and gg == 0:
+                Moneta(tile_width * x, last.rect.y - 200)
+                gg = 1
             new = Block(tile_width * x, last.rect.y - 150)
-        elif level_y[x] == '#':
-            a = random.randint(1, 50)
-            if a == 1:
-                new = Moneta(tile_width * x, last.rect.y - 150)
+
         elif level_y[x] == 'G':
+            a = random.randint(1, 10)
+            if a == 1:
+                Moneta(tile_width * x, last.rect.y - 200)
             new = Block_dis(tile_width * x, last.rect.y - 150)
+
+        elif level_y[x] == 'L':
+            a = random.randint(1, 10)
+            if a == 1:
+                Moneta(tile_width * x, last.rect.y - 200)
+            new = Block_lomaet(tile_width * x, last.rect.y - 150)
     last = new
     return old_lvl1, old_lvl2
 
@@ -202,10 +248,12 @@ if __name__ == '__main__':
 
     all_sprites = pygame.sprite.Group()
     usual_blocks = pygame.sprite.Group()
+    lomaet_blocks = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
     dis_blocks = pygame.sprite.Group()
     moneta_blocks = pygame.sprite.Group()
     player, level_x, level_y = generate_level(load_level('fon.txt'))
+    font = pygame.font.Font(None, 40)
     camera = Camera()
     while running:
         print(player.score)
@@ -231,14 +279,18 @@ if __name__ == '__main__':
             if event.type == MYEVENTTYPE:
                 old_lvl1, old_lvl2 = generate_new_level(load_level('fon.txt'), old_lvl1, old_lvl2)
         player_group.update()
-        screen.blit(bg, (0, 0)) #вообще здесь должна быть картинка с фоном, но пока что так
+        screen.blit(bg, (0, 0))
+        # вообще здесь должна быть картинка с фоном, но пока что так
         usual_blocks.draw(screen)
         player_group.draw(screen)
         dis_blocks.draw(screen)
+        lomaet_blocks.draw(screen)
         moneta_blocks.draw(screen)
+        screen.blit(font.render("Чашек рамена: " + str(monetki), True, (100, 255, 100)), (250, 0))
         pygame.display.flip()
 
         clock.tick(fps)
         for sprites in all_sprites:
              camera.apply(sprites)
+
     pygame.quit()

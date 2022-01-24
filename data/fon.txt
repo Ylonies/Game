@@ -2,16 +2,16 @@
 #GG#BBB##G
 
 
-#B####G###
+#B#L##G###
 
 
-##BB######
+##BB###L##
 
 
-BB####B###
+BB####L###
 
 
-##BB######
+##BB###L##
 
 
 #####BBB##
@@ -20,4 +20,4 @@ BB####B###
 ##BBB##BB#
 
 #H########
-BBBBBBBBBB
+BBBBBBLLLL

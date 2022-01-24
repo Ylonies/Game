@@ -1,5 +1,5 @@
 @@@@@@@@@@
-#GG#BBB##G
+#GG######G
 
 
 #B#L##G###
@@ -17,7 +17,8 @@ BB####L###
 #####BBB##
 
 
-##BBB##BB#
+##BB###BB#
+
 
 #H########
-BBBBBBLLLL
+BBBBBBBBBB

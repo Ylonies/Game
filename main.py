@@ -41,11 +41,11 @@ class Player(pygame.sprite.Sprite):
         player_group.add(self)# он ниче не умеет делать
         self.move_down = False# вверх
         self.move_up = 0
-        self.max = 220
+        self.usual_max = 250
+        self.max = self.usual_max
         self.pressedRight, self.pressedLeft = False, False
         self.val = 10
         self.h = 70
-        self.score = 0
 
     def update(self):
         global visota, level_now
@@ -56,7 +56,7 @@ class Player(pygame.sprite.Sprite):
                 print(block.rect.y, self.rect.y)
                 if block.rect.y == self.rect.y + self.h:
                     self.move_down = False
-                    self.max = 220
+                    self.max = self.usual_max
                     self.val = 10
                     visota = self.rect.y
                     level_now = block
@@ -67,10 +67,11 @@ class Player(pygame.sprite.Sprite):
 
             if pygame.sprite.spritecollideany(self, lomaet_blocks):
                 block = pygame.sprite.spritecollide(self, lomaet_blocks, False)[0]
-                if block.rect.y == self.rect.y + 20:
+                if block.rect.y == self.rect.y + self.h:
+                    level_now = block
                     if pygame.sprite.spritecollide(self, lomaet_blocks, True):
                         self.move_down = False
-                        self.max = 220
+                        self.max = self.usual_max
                         self.val = 10
                 else:
                     self.val = 10
@@ -84,6 +85,7 @@ class Player(pygame.sprite.Sprite):
                     self.move_down = False
                     self.max = 560
                     self.val = 20
+                    level_now = block
                 else:
                     self.val = 10
                     self.rect.y += self.val
@@ -108,14 +110,13 @@ class Player(pygame.sprite.Sprite):
             self.rect.x -= 0.75 * self.val
         global monetki
         if pygame.sprite.spritecollide(self, moneta_blocks, True):
-            self.score += 1
             monetki += 1
 
 
 class Block_dis(pygame.sprite.Sprite):#просто блок
     def __init__(self, pos_x, pos_y):
         super().__init__(dis_blocks, all_sprites)
-        self.image = load_image('bl.jpg')
+        self.image = load_image('block_dis.jpg')
         # self.rect = self.image.get_rect().move(
         #     tile_width * pos_x, tile_height * pos_y)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
@@ -187,14 +188,18 @@ def generate_level(level):
             if level[y][x] == 'B':
                 if y == 1:
                     last = Block(tile_width * x, tile_height * y)
-                elif y == len(level) -1:
+                elif y == len(level) - 1:
                     level_now = Block(tile_width * x, tile_height * y)
                 else:
 
                     Block(tile_width * x, tile_height * y)
 
             elif level[y][x] == 'G':
-                Block_dis(tile_width * x, tile_height * y)
+                if y == 1:
+                    last = Block_dis(tile_width * x, tile_height * y)
+                else:
+                    Block_dis(tile_width * x, tile_height * y)
+
 
             elif level[y][x] == 'L':
                 Block_lomaet(tile_width * x, tile_height * y)
@@ -207,9 +212,9 @@ def generate_level(level):
 def generate_new_level(level, old_lvl1, old_lvl2):
     global last
     gg = 0
-    level_y = random.choice(level[len(level) - 4:0:-3])
+    level_y = random.choice(level[len(level) - 5:0:-3])
     while old_lvl1 == level_y or old_lvl2 == level_y:
-        level_y = random.choice(level[len(level) - 4:0:-3])
+        level_y = random.choice(level[len(level) - 5:0:-3])
 
     old_lvl2 = old_lvl1
     old_lvl1 = level_y
@@ -223,17 +228,53 @@ def generate_new_level(level, old_lvl1, old_lvl2):
 
         elif level_y[x] == 'G':
             a = random.randint(1, 10)
-            if a == 1:
+            if a == 1 and gg == 0:
                 Moneta(tile_width * x, last.rect.y - 250)
+                gg = 1
             new = Block_dis(tile_width * x, last.rect.y - 200)
 
         elif level_y[x] == 'L':
-            a = random.randint(1, 10)
-            if a == 1:
-                Moneta(tile_width * x, last.rect.y - 250)
             new = Block_lomaet(tile_width * x, last.rect.y - 200)
     last = new
     return old_lvl1, old_lvl2
+
+
+FPS = 50
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+def start_screen():
+    intro_text = ["ЗАСТАВКА", "",
+                  "Правила игры",
+                  "Если в правилах несколько строк,",
+                  "приходится выводить их построчно"]
+
+    fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 30)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        pygame.display.flip()
+        clock.tick(FPS)
 
 
 if __name__ == '__main__':
@@ -244,7 +285,6 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
     fps = 30
     old_lvl1, old_lvl2 = -1, -1
-    game_over = False
     MYEVENTTYPE = pygame.USEREVENT + 1
     pygame.time.set_timer(MYEVENTTYPE, 500)
     clock = pygame.time.Clock()
@@ -286,19 +326,16 @@ if __name__ == '__main__':
         screen.blit(bg, (0, 0))
         # вообще здесь должна быть картинка с фоном, но пока что так
         usual_blocks.draw(screen)
-        player_group.draw(screen)
         dis_blocks.draw(screen)
         lomaet_blocks.draw(screen)
         moneta_blocks.draw(screen)
-        screen.blit(font.render("Чашек рамена: " + str(monetki), True, (100, 255, 100)), (250, 0))
+        player_group.draw(screen)
+        screen.blit(font.render("Чашек рамена: " + str(monetki), True, (255, 0, 0)), (250, 0))
         pygame.display.flip()
 
         clock.tick(fps)
         for sprites in all_sprites:
              camera.apply(sprites)
         if player.rect.y > level_now.rect.y:
-            game_over = True
-
-        if game_over:
-            screen.blit(font.render("GAME OVER", True, (255, 0, 0)), (200, 150))
+            running = False
     pygame.quit()

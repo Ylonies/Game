@@ -247,24 +247,20 @@ def terminate():
     sys.exit()
 
 
-def start_screen():
-    intro_text = ["ЗАСТАВКА", "",
-                  "Правила игры",
-                  "Если в правилах несколько строк,",
-                  "приходится выводить их построчно"]
-
-    fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
-    screen.blit(fon, (0, 0))
-    font = pygame.font.Font(None, 30)
-    text_coord = 50
-    for line in intro_text:
-        string_rendered = font.render(line, 1, pygame.Color('white'))
-        intro_rect = string_rendered.get_rect()
-        text_coord += 10
-        intro_rect.top = text_coord
-        intro_rect.x = 10
-        text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
+def start_screen(WIDTH, HEIGHT):
+    screen.blit(bg, (0, 0))
+    start = load_image("start.png", -1)
+    screen.blit(start, (10, 150))
+    # font = pygame.font.Font(None, 30)
+    # text_coord = 50
+    # for line in intro_text:
+    #     string_rendered = font.render(line, 1, pygame.Color('red'))
+    #     intro_rect = string_rendered.get_rect()
+    #     text_coord += 10
+    #     intro_rect.top = text_coord
+    #     intro_rect.x = 10
+    #     text_coord += intro_rect.height
+    #     screen.blit(string_rendered, intro_rect)
 
     while True:
         for event in pygame.event.get():
@@ -274,9 +270,21 @@ def start_screen():
                     event.type == pygame.MOUSEBUTTONDOWN:
                 return  # начинаем игру
         pygame.display.flip()
-        clock.tick(FPS)
 
 
+def finish_screen(w,h):
+    screen.blit(bg, (0, 0))
+    start = load_image("game over.jpg", -1)
+    screen.blit(start, (10, 120))
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                return  # начинаем игру
+        pygame.display.flip()
 if __name__ == '__main__':
     #какие то константы
     running = True
@@ -289,6 +297,8 @@ if __name__ == '__main__':
     pygame.time.set_timer(MYEVENTTYPE, 500)
     clock = pygame.time.Clock()
     bg = load_image("screen.jpg")
+    pygame.mixer.music.load('naruto.mp3')
+    pygame.mixer.music.play()
 
     all_sprites = pygame.sprite.Group()
     usual_blocks = pygame.sprite.Group()
@@ -299,6 +309,7 @@ if __name__ == '__main__':
     player, level_x, level_y = generate_level(load_level('fon.txt'))
     font = pygame.font.Font(None, 40)
     camera = Camera()
+    start_screen(w,h)
     while running:
         camera.update(player)
         for event in pygame.event.get():
@@ -337,5 +348,6 @@ if __name__ == '__main__':
         for sprites in all_sprites:
              camera.apply(sprites)
         if player.rect.y > level_now.rect.y:
+            finish_screen(w,h)
             running = False
     pygame.quit()

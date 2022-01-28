@@ -5,8 +5,6 @@ import sys
 pygame.init()
 
 monetki = 0
-visota = 0
-helovek = 100
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -27,9 +25,10 @@ def load_level(filename):
         level_map = [line.strip() for line in mapFile]
     max_width = max(map(len, level_map))
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
-# где-то здесь расписывются классы
+# здесь расписывются классы
 
 
+# герой
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
@@ -37,16 +36,15 @@ class Player(pygame.sprite.Sprite):
         self.image = load_image(f'player{self.skin}.png', -1)
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
-        # self.pos_x = self.rect.x
-        # self.pos_y = self.rect.y
-        player_group.add(self)# он ниче не умеет делать
-        self.move_down = False# вверх
+        player_group.add(self)
+        self.move_down = False#вверх
         self.move_up = 0
         self.max = self.usual_max = 250
         self.pressedRight, self.pressedLeft = False, False
         self.val = self.usual_val = 10
         self.h = 70
 
+    # смена скина героя
     def skin_change(self):
         global smoke_show
         # if monetki / 10 == self.skin and self.skin < 5:
@@ -57,11 +55,11 @@ class Player(pygame.sprite.Sprite):
                 self.rect.x, self.rect.y)
             smoke_show = True
 
-
-
+    # движение героя
     def update(self):
         global level_now
         if self.move_down == True:
+            # обычный блок
             if pygame.sprite.spritecollideany(self, usual_blocks):
                 block = pygame.sprite.spritecollide(self, usual_blocks, False)[0]
                 print(block.rect.y, self.rect.y)
@@ -74,6 +72,7 @@ class Player(pygame.sprite.Sprite):
                     self.val = self.usual_val
                     self.rect.y += self.val
 
+            # ломающийся блок
             elif pygame.sprite.spritecollideany(self, сloud_blocks):
                 block = pygame.sprite.spritecollide(self, сloud_blocks, False)[0]
                 if block.rect.y == self.rect.y + self.h:
@@ -85,6 +84,7 @@ class Player(pygame.sprite.Sprite):
                     self.val = self.usual_val
                     self.rect.y += self.val
 
+            # батут
             elif pygame.sprite.spritecollideany(self, dis_blocks):
                 block = pygame.sprite.spritecollide(self, dis_blocks, False)[0]
                 print(block.rect.y, self.rect.y)
@@ -128,7 +128,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.x = w
 
 
-
+# анимация смены героя
 class Smoke_Animation(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows):
         super().__init__(smoke_group)
@@ -156,53 +156,51 @@ class Smoke_Animation(pygame.sprite.Sprite):
             smoke_show = False
 
 
-class Block_dis(pygame.sprite.Sprite):#просто блок
+# батут
+class Block_trampoline(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(dis_blocks, all_sprites)
-        self.image = load_image('block_dis.jpg')
-        # self.rect = self.image.get_rect().move(
-        #     tile_width * pos_x, tile_height * pos_y)
+        self.image = load_image('block_trampoline.jpg')
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         dis_blocks.add(self)
         all_sprites.add(self)
         self.y = pos_y // tile_height
 
 
-class Ramen(pygame.sprite.Sprite):# просто блок
+# рамен
+class Ramen(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(moneta_blocks, all_sprites)
         self.image = load_image('ramen.png', -1)
-        # self.rect = self.image.get_rect().move(
-        #     tile_width * pos_x, tile_height * pos_y)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         moneta_blocks.add(self)
         all_sprites.add(self)
         self.y = pos_y // tile_height
 
 
-class Block_lomaet(pygame.sprite.Sprite):# просто блок
+# ломающийся блок
+class Сloud_block(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(сloud_blocks, all_sprites)
-        self.image = load_image('block_lom.png', -1)
-        # self.rect = self.image.get_rect().move(
-        #     tile_width * pos_x, tile_height * pos_y)
+        self.image = load_image('сloud_block.png', -1)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         сloud_blocks.add(self)
         all_sprites.add(self)
         self.y = pos_y // tile_height
 
 
-class Block(pygame.sprite.Sprite):#просто блок
+# просто блок
+class Block(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(usual_blocks, all_sprites)
         self.image = load_image('usual_block.jpg')
-        # self.rect = self.image.get_rect().move(
-        #     tile_width * pos_x, tile_height * pos_y)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
         usual_blocks.add(self)
         all_sprites.add(self)
         self.y = pos_y // tile_height
 
+
+# слежение камеры за героем
 class Camera:
     # зададим начальный сдвиг камеры
     def __init__(self):
@@ -237,15 +235,15 @@ def generate_level(level):
             # батут
             elif level[y][x] == 'G':
                 if y == 1:
-                    last = Block_dis(tile_width * x, tile_height * y)
+                    last = Block_trampoline(tile_width * x, tile_height * y)
                 else:
-                    Block_dis(tile_width * x, tile_height * y)
+                    Block_trampoline(tile_width * x, tile_height * y)
 
             # Облако(ломающийся блок)
             elif level[y][x] == 'L':
                 a = random.randint(1, 5)
                 if a == 1 and pop == 0:
-                    Block_lomaet(tile_width * x, tile_height * y)
+                    Сloud_block(tile_width * x, tile_height * y)
                     pop = 1
                 else:
                     if y == 1:
@@ -289,14 +287,14 @@ def generate_new_level(level, old_lvl1, old_lvl2):
                 Ramen(tile_width * x, last.rect.y - 250)
                 gg = 1
 
-            new = Block_dis(tile_width * x, last.rect.y - 200)
+            new = Block_trampoline(tile_width * x, last.rect.y - 200)
 
 
         # Облако(ломающийся блок)
         elif level_y[x] == 'L':
             a = random.randint(1, 5)
             if a == 1 and pop == 0:
-                new = Block_lomaet(tile_width * x, last.rect.y - 200)
+                new = Сloud_block(tile_width * x, last.rect.y - 200)
                 pop = 1
             else:
                 new = Block(tile_width * x, last.rect.y - 200)
@@ -309,21 +307,10 @@ def terminate():
     sys.exit()
 
 
-def start_screen(WIDTH, HEIGHT):
+def start_screen():
     screen.blit(bg, (0, 0))
     start = load_image("start.png", -1)
     screen.blit(start, (10, 150))
-    # font = pygame.font.Font(None, 30)
-    # text_coord = 50
-    # for line in intro_text:
-    #     string_rendered = font.render(line, 1, pygame.Color('red'))
-    #     intro_rect = string_rendered.get_rect()
-    #     text_coord += 10
-    #     intro_rect.top = text_coord
-    #     intro_rect.x = 10
-    #     text_coord += intro_rect.height
-    #     screen.blit(string_rendered, intro_rect)
-
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -338,20 +325,23 @@ def finish_screen():
     screen.blit(bg, (0, 0))
     start = load_image("game over.jpg", -1)
     screen.blit(start, (10, 120))
-
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
             elif event.type == pygame.KEYDOWN or \
                     event.type == pygame.MOUSEBUTTONDOWN:
-                return  # начинаем игру
+                return
+                # начинаем игру
         pygame.display.flip()
+
+
 if __name__ == '__main__':
     #какие то константы
     running = True
     tile_width = tile_height = 50
     size = w, h = 500, 400
+    pygame.display.set_caption("Naruto and ramen")
     screen = pygame.display.set_mode(size)
     fps = 30
     n = 1
@@ -378,7 +368,7 @@ if __name__ == '__main__':
     smoke = Smoke_Animation(load_image("smoke.png"), 10, 1)
     font = pygame.font.Font(None, 40)
     camera = Camera()
-    start_screen(w,h)
+    start_screen()
     while running:
         camera.update(player)
         for event in pygame.event.get():
@@ -406,7 +396,6 @@ if __name__ == '__main__':
                     fps += 0.5
                     print(fps)
 
-
         screen.blit(bg, (0, 0))
         usual_blocks.draw(screen)
         dis_blocks.draw(screen)
@@ -421,7 +410,6 @@ if __name__ == '__main__':
             player_group.draw(screen)
         screen.blit(font.render("Чашек рамена: " + str(monetki), True, (255, 0, 0)), (250, 0))
         pygame.display.flip()
-
         clock.tick(fps)
         for sprites in all_sprites:
              camera.apply(sprites)

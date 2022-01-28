@@ -4,7 +4,7 @@ import os
 import sys
 pygame.init()
 
-monetki = 0
+
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -47,8 +47,7 @@ class Player(pygame.sprite.Sprite):
     # смена скина героя
     def skin_change(self):
         global smoke_show
-        # if monetki / 10 == self.skin and self.skin < 5:
-        if monetki == self.skin:
+        if monetki / 10 == self.skin and self.skin < 5:
             self.skin += 1
             self.image = load_image(f'player{self.skin}.png', -1)
             self.rect = self.image.get_rect().move(
@@ -155,6 +154,16 @@ class Smoke_Animation(pygame.sprite.Sprite):
         if self.cur_frame == 9:
             smoke_show = False
 
+# рамен
+class Ramen(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(moneta_blocks, all_sprites)
+        self.image = load_image('ramen.png', -1)
+        self.rect = self.image.get_rect().move(pos_x, pos_y)
+        moneta_blocks.add(self)
+        all_sprites.add(self)
+        self.y = pos_y // tile_height
+
 
 # батут
 class Block_trampoline(pygame.sprite.Sprite):
@@ -167,18 +176,7 @@ class Block_trampoline(pygame.sprite.Sprite):
         self.y = pos_y // tile_height
 
 
-# рамен
-class Ramen(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
-        super().__init__(moneta_blocks, all_sprites)
-        self.image = load_image('ramen.png', -1)
-        self.rect = self.image.get_rect().move(pos_x, pos_y)
-        moneta_blocks.add(self)
-        all_sprites.add(self)
-        self.y = pos_y // tile_height
-
-
-# ломающийся блок
+# блок- полёт
 class Сloud_block(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(сloud_blocks, all_sprites)
@@ -345,6 +343,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode(size)
     fps = 30
     n = 1
+    monetki = 0
     old_lvl1, old_lvl2 = -1, -1
     MYEVENTTYPE = pygame.USEREVENT + 1
     fps_change = pygame.USEREVENT + 2
@@ -352,8 +351,8 @@ if __name__ == '__main__':
     pygame.time.set_timer(fps_change, 5000)
     clock = pygame.time.Clock()
     bg = load_image("screen.jpg")
-    # pygame.mixer.music.load('naruto.mp3')
-    # pygame.mixer.music.play()
+    pygame.mixer.music.load('naruto.mp3')
+    pygame.mixer.music.play()
     smoke_show = False
 
 
@@ -415,5 +414,4 @@ if __name__ == '__main__':
              camera.apply(sprites)
         if player.rect.y + 50 > level_now.rect.y:
             finish_screen()
-
     pygame.quit()

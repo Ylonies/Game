@@ -33,7 +33,8 @@ def load_level(filename):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
-        self.image = load_image('player.png', -1)
+        self.skin = 1
+        self.image = load_image(f'player{self.skin}.png', -1)
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
         # self.pos_x = self.rect.x
@@ -41,63 +42,68 @@ class Player(pygame.sprite.Sprite):
         player_group.add(self)# он ниче не умеет делать
         self.move_down = False# вверх
         self.move_up = 0
-        self.usual_max = 250
-        self.max = self.usual_max
+        self.max = self.usual_max = 250
         self.pressedRight, self.pressedLeft = False, False
-        self.val = 10
+        self.val = self.usual_val = 10
         self.h = 70
 
+    def skin_change(self):
+        global smoke_show
+        # if monetki / 10 == self.skin and self.skin < 5:
+        if monetki == self.skin:
+            self.skin += 1
+            self.image = load_image(f'player{self.skin}.png', -1)
+            self.rect = self.image.get_rect().move(
+                self.rect.x, self.rect.y)
+            smoke_show = True
+
+
+
     def update(self):
-        global visota, level_now
+        global level_now
         if self.move_down == True:
-            gg = 0
             if pygame.sprite.spritecollideany(self, usual_blocks):
                 block = pygame.sprite.spritecollide(self, usual_blocks, False)[0]
                 print(block.rect.y, self.rect.y)
                 if block.rect.y == self.rect.y + self.h:
                     self.move_down = False
                     self.max = self.usual_max
-                    self.val = 10
-                    visota = self.rect.y
+                    self.val = self.usual_val
                     level_now = block
                 else:
-                    self.val = 10
+                    self.val = self.usual_val
                     self.rect.y += self.val
-                    gg = 1
 
-            if pygame.sprite.spritecollideany(self, lomaet_blocks):
-                block = pygame.sprite.spritecollide(self, lomaet_blocks, False)[0]
+            elif pygame.sprite.spritecollideany(self, сloud_blocks):
+                block = pygame.sprite.spritecollide(self, сloud_blocks, False)[0]
                 if block.rect.y == self.rect.y + self.h:
                     level_now = block
-                    if pygame.sprite.spritecollide(self, lomaet_blocks, True):
-                        self.move_down = False
-                        self.max = self.usual_max
-                        self.val = 10
+                    self.move_down = False
+                    self.max = self.usual_max * 10
+                    self.val = self.usual_val * 1.25
                 else:
-                    self.val = 10
+                    self.val = self.usual_val
                     self.rect.y += self.val
-                    gg = 1
 
-            if pygame.sprite.spritecollideany(self, dis_blocks):
+            elif pygame.sprite.spritecollideany(self, dis_blocks):
                 block = pygame.sprite.spritecollide(self, dis_blocks, False)[0]
                 print(block.rect.y, self.rect.y)
                 if block.rect.y == self.rect.y + self.h:
                     self.move_down = False
-                    self.max = 560
-                    self.val = 20
+                    self.max = self.usual_max * 2
+                    self.val = self.usual_val * 2
                     level_now = block
                 else:
                     self.val = 10
                     self.rect.y += self.val
-                    gg = 1
 
-            elif gg == 0:
-                self.val = 10
+            else:
+                self.val = self.usual_val
                 self.rect.y += self.val
 
         else:
             if self.move_up == self.max:
-                self.val = 10
+                self.val = self.usual_val
                 self.move_up = 0
                 self.move_down = True
                 self.rect.y -= self.val
@@ -105,12 +111,49 @@ class Player(pygame.sprite.Sprite):
                 self.rect.y -= self.val
                 self.move_up += self.val
         if self.pressedRight == True:
-            self.rect.x += 0.75 * self.val
+            self.rect.x += self.usual_val
         if self.pressedLeft == True:
-            self.rect.x -= 0.75 * self.val
+            self.rect.x -= self.usual_val
         global monetki
-        if pygame.sprite.spritecollide(self, moneta_blocks, True):
-            monetki += 1
+        if pygame.sprite.spritecollideany(self, moneta_blocks):
+            block = pygame.sprite.spritecollide(self, moneta_blocks, False)[0]
+            print(block.rect.y, "  ", self.rect.y)
+            if self.rect.y < block.rect.y:
+                monetki += 1
+                pygame.sprite.spritecollide(self, moneta_blocks, True)
+
+        if self.rect.x > w:
+            self.rect.x = 0
+        if self.rect.x < 0:
+            self.rect.x = w
+
+
+
+class Smoke_Animation(pygame.sprite.Sprite):
+    def __init__(self, sheet, columns, rows):
+        super().__init__(smoke_group)
+        self.frames = []
+        self.cut_sheet(sheet, columns, rows)
+        self.cur_frame = 0
+        self.image = self.frames[self.cur_frame]
+
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pygame.Rect(0, 0, sheet.get_width() // columns,
+                                sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pygame.Rect(
+                    frame_location, self.rect.size)))
+
+    def update(self):
+        global smoke_show
+        self.rect.x, self.rect.y = player.rect.x, player.rect.y
+        print(self.rect.x, self.rect.y, "!!!")
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
+        if self.cur_frame == 9:
+            smoke_show = False
 
 
 class Block_dis(pygame.sprite.Sprite):#просто блок
@@ -125,7 +168,7 @@ class Block_dis(pygame.sprite.Sprite):#просто блок
         self.y = pos_y // tile_height
 
 
-class Moneta(pygame.sprite.Sprite):# просто блок
+class Ramen(pygame.sprite.Sprite):# просто блок
     def __init__(self, pos_x, pos_y):
         super().__init__(moneta_blocks, all_sprites)
         self.image = load_image('ramen.png', -1)
@@ -139,12 +182,12 @@ class Moneta(pygame.sprite.Sprite):# просто блок
 
 class Block_lomaet(pygame.sprite.Sprite):# просто блок
     def __init__(self, pos_x, pos_y):
-        super().__init__(lomaet_blocks, all_sprites)
+        super().__init__(сloud_blocks, all_sprites)
         self.image = load_image('block_lom.png', -1)
         # self.rect = self.image.get_rect().move(
         #     tile_width * pos_x, tile_height * pos_y)
         self.rect = self.image.get_rect().move(pos_x, pos_y)
-        lomaet_blocks.add(self)
+        сloud_blocks.add(self)
         all_sprites.add(self)
         self.y = pos_y // tile_height
 
@@ -167,11 +210,7 @@ class Camera:
 
     # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
-        global visota
-        global helovek
-        #helovek = obj.rect.y + self.dy
-        #obj.rect.y = max(visota, helovek)
-        obj.rect.y += self.dy
+        obj.rect.y += self.dy + 80
 
     # позиционировать камеру на объекте target
     def update(self, target):
@@ -183,8 +222,9 @@ def generate_level(level):
     global last, level_now
     new_player, x, y = None, None, None
     for y in range(len(level)):
-        for x in range(len(level[y])):# если в txt файле че то там, то такой то класс то-т
-
+        pop = 0
+        for x in range(len(level[y])):
+            # просто блок
             if level[y][x] == 'B':
                 if y == 1:
                     last = Block(tile_width * x, tile_height * y)
@@ -194,16 +234,28 @@ def generate_level(level):
 
                     Block(tile_width * x, tile_height * y)
 
+            # батут
             elif level[y][x] == 'G':
                 if y == 1:
                     last = Block_dis(tile_width * x, tile_height * y)
                 else:
                     Block_dis(tile_width * x, tile_height * y)
 
-
+            # Облако(ломающийся блок)
             elif level[y][x] == 'L':
-                Block_lomaet(tile_width * x, tile_height * y)
+                a = random.randint(1, 5)
+                if a == 1 and pop == 0:
+                    Block_lomaet(tile_width * x, tile_height * y)
+                    pop = 1
+                else:
+                    if y == 1:
+                        last = Block(tile_width * x, tile_height * y)
+                    elif y == len(level) - 1:
+                        level_now = Block(tile_width * x, tile_height * y)
+                    else:
 
+                        Block(tile_width * x, tile_height * y)
+            # герой
             elif level[y][x] == 'H':
                 new_player = Player(x, y)
     return new_player, x, y
@@ -212,6 +264,7 @@ def generate_level(level):
 def generate_new_level(level, old_lvl1, old_lvl2):
     global last
     gg = 0
+    pop = 0
     level_y = random.choice(level[len(level) - 5:0:-3])
     while old_lvl1 == level_y or old_lvl2 == level_y:
         level_y = random.choice(level[len(level) - 5:0:-3])
@@ -219,27 +272,36 @@ def generate_new_level(level, old_lvl1, old_lvl2):
     old_lvl2 = old_lvl1
     old_lvl1 = level_y
     for x in range(len(level_y)):
+        # просто блок
         if level_y[x] == 'B':
-            a = random.randint(1, 10)
+            # рамен
+            a = random.randint(1, 5)
             if a == 1 and gg == 0:
-                Moneta(tile_width * x, last.rect.y - 250)
+                Ramen(tile_width * x, last.rect.y - 250)
                 gg = 1
             new = Block(tile_width * x, last.rect.y - 200)
 
+        # батут
         elif level_y[x] == 'G':
-            a = random.randint(1, 10)
+            # рамен
+            a = random.randint(1, 5)
             if a == 1 and gg == 0:
-                Moneta(tile_width * x, last.rect.y - 250)
+                Ramen(tile_width * x, last.rect.y - 250)
                 gg = 1
+
             new = Block_dis(tile_width * x, last.rect.y - 200)
 
+
+        # Облако(ломающийся блок)
         elif level_y[x] == 'L':
-            new = Block_lomaet(tile_width * x, last.rect.y - 200)
+            a = random.randint(1, 5)
+            if a == 1 and pop == 0:
+                new = Block_lomaet(tile_width * x, last.rect.y - 200)
+                pop = 1
+            else:
+                new = Block(tile_width * x, last.rect.y - 200)
     last = new
     return old_lvl1, old_lvl2
-
-
-FPS = 50
 
 
 def terminate():
@@ -272,7 +334,7 @@ def start_screen(WIDTH, HEIGHT):
         pygame.display.flip()
 
 
-def finish_screen(w,h):
+def finish_screen():
     screen.blit(bg, (0, 0))
     start = load_image("game over.jpg", -1)
     screen.blit(start, (10, 120))
@@ -292,21 +354,28 @@ if __name__ == '__main__':
     size = w, h = 500, 400
     screen = pygame.display.set_mode(size)
     fps = 30
+    n = 1
     old_lvl1, old_lvl2 = -1, -1
     MYEVENTTYPE = pygame.USEREVENT + 1
-    pygame.time.set_timer(MYEVENTTYPE, 500)
+    fps_change = pygame.USEREVENT + 2
+    pygame.time.set_timer(MYEVENTTYPE, 100)
+    pygame.time.set_timer(fps_change, 5000)
     clock = pygame.time.Clock()
     bg = load_image("screen.jpg")
-    pygame.mixer.music.load('naruto.mp3')
-    pygame.mixer.music.play()
+    # pygame.mixer.music.load('naruto.mp3')
+    # pygame.mixer.music.play()
+    smoke_show = False
+
 
     all_sprites = pygame.sprite.Group()
     usual_blocks = pygame.sprite.Group()
-    lomaet_blocks = pygame.sprite.Group()
+    сloud_blocks = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
+    smoke_group = pygame.sprite.Group()
     dis_blocks = pygame.sprite.Group()
     moneta_blocks = pygame.sprite.Group()
     player, level_x, level_y = generate_level(load_level('fon.txt'))
+    smoke = Smoke_Animation(load_image("smoke.png"), 10, 1)
     font = pygame.font.Font(None, 40)
     camera = Camera()
     start_screen(w,h)
@@ -332,22 +401,31 @@ if __name__ == '__main__':
                     player.pressedLeft = False
             if event.type == MYEVENTTYPE:
                 old_lvl1, old_lvl2 = generate_new_level(load_level('fon.txt'), old_lvl1, old_lvl2)
+            if event.type == fps_change:
+                if fps <= 60:
+                    fps += 0.5
+                    print(fps)
 
-        player_group.update()
+
         screen.blit(bg, (0, 0))
-        # вообще здесь должна быть картинка с фоном, но пока что так
         usual_blocks.draw(screen)
         dis_blocks.draw(screen)
-        lomaet_blocks.draw(screen)
+        сloud_blocks.draw(screen)
         moneta_blocks.draw(screen)
-        player_group.draw(screen)
+        if smoke_show:
+            smoke_group.update()
+            smoke_group.draw(screen)
+        else:
+            player_group.update()
+            player.skin_change()
+            player_group.draw(screen)
         screen.blit(font.render("Чашек рамена: " + str(monetki), True, (255, 0, 0)), (250, 0))
         pygame.display.flip()
 
         clock.tick(fps)
         for sprites in all_sprites:
              camera.apply(sprites)
-        if player.rect.y > level_now.rect.y:
-            finish_screen(w,h)
-            running = False
+        if player.rect.y + 50 > level_now.rect.y:
+            finish_screen()
+
     pygame.quit()
